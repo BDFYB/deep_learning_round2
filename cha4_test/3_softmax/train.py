@@ -4,8 +4,8 @@ from tensorflow.python.framework import graph_util
 import model
 import os
 
-SUMMARY_DIR = "./tensorboard"
-FROZEN_DIR = "./frozen_graph"
+SUMMARY_DIR = "./tensorboard/"
+FROZEN_DIR = "./frozen_graph/"
 FROZEN_FILE = 'graph.pb'
 
 TRAIN_FILE = "./data/iris_train.csv"
@@ -62,5 +62,6 @@ if __name__ == "__main__":
 
     if os.path.isdir(FROZEN_DIR):
         os.system("rm -rf %s" % FROZEN_DIR)
+    os.makedirs(FROZEN_DIR)
 
     _main()

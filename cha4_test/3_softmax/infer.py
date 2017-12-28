@@ -3,7 +3,7 @@ from tensorflow.python.framework import graph_util
 from tools import data_processor
 
 
-FROZEN_DIR = "./frozen_graph"
+FROZEN_DIR = "./frozen_graph/"
 FROZEN_FILE = 'graph.pb'
 
 TRAIN_FILE = "./data/iris_test.csv"
