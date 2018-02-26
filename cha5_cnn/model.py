@@ -1,4 +1,4 @@
-import tensorflow as tf 
+import tensorflow as tf
 from tools.lazy_property import lazy_property
 
 
@@ -11,10 +11,10 @@ class ImageCnnModel(object):
         #这边这种使用方式是可以的，即将tfread与整个模型直接连接起来，但是目前没有找到好的infer形式
         #self.image = train_image
         #self.label = train_label
-        
+
         self.global_step = tf.Variable(1, trainable=False, name="global_steps")
         self.learning_rate = tf.train.exponential_decay(
-            learning_rate=0.01,
+            learning_rate=0.1,
             global_step=self.global_step,
             decay_steps=120,
             decay_rate=0.9,
@@ -28,15 +28,18 @@ class ImageCnnModel(object):
     @lazy_property
     def train(self):
         # input size: (batch_size, 250, 151, 1)
-        conv_layer_one = tf.contrib.layers.conv2d(    
+        conv_layer_one = tf.contrib.layers.conv2d(
             inputs=self.image,
             num_outputs=32,
             kernel_size=(5, 5),
             padding='SAME',
             activation_fn=tf.nn.relu,
+            #activation_fn=tf.nn.tanh,
             stride=[2, 2],
-            weights_initializer=tf.contrib.layers.xavier_initializer(),
-            biases_initializer=tf.zeros_initializer(),
+            #weights_initializer=tf.contrib.layers.xavier_initializer(),            #weights_initializer=tf.uniform_unit_scaling_initializer(),
+            weights_initializer=tf.random_uniform_initializer(minval=-0.8, maxval=0.8),
+            #biases_initializer=tf.zeros_initializer(),
+            biases_initializer=tf.random_uniform_initializer(minval=-0.8, maxval=0.8),
             trainable=True,
         )
         # conv_layer_one size: (batch_size, 125, 76, 32)
@@ -45,6 +48,7 @@ class ImageCnnModel(object):
             ksize=[1, 2, 2, 1],
             strides=[1, 2, 2, 1],
             padding='SAME',
+            name='max_pool_one',
         )
         # pool_layer_one size: (batch_size, 63, 38, 32)
         conv_layer_two = tf.contrib.layers.conv2d(
@@ -53,9 +57,12 @@ class ImageCnnModel(object):
             kernel_size=(5, 5),
             padding='SAME',
             activation_fn=tf.nn.relu,
+            #activation_fn=tf.nn.tanh,
             stride=[2, 2],
-            weights_initializer=tf.contrib.layers.xavier_initializer(),
-            biases_initializer=tf.zeros_initializer(),
+            #weights_initializer=tf.contrib.layers.xavier_initializer(),
+            weights_initializer=tf.random_uniform_initializer(minval=-0.8, maxval=0.8),
+            #biases_initializer=tf.zeros_initializer(),
+            biases_initializer=tf.random_uniform_initializer(minval=-0.8, maxval=0.8),
             trainable=True,
         )
         # conv_layer_two size: (batch_size, 32, 19, 64)
@@ -64,6 +71,7 @@ class ImageCnnModel(object):
             ksize=[1, 2, 2, 1],
             strides=[1, 2, 2, 1],
             padding='SAME',
+            name='max_pool_two',
         )
         # pool_layer_two size: (batch_size, 16, 10, 64)
         batch_size, image_hight, image_width, channel = pool_layer_two.get_shape()
@@ -72,7 +80,8 @@ class ImageCnnModel(object):
             flattened,
             512,
             activation_fn=tf.nn.relu,
-            weights_initializer=tf.contrib.layers.xavier_initializer(),
+            #weights_initializer=tf.contrib.layers.xavier_initializer(),
+            weights_initializer=tf.random_uniform_initializer(minval=-0.8, maxval=0.8),
         )
         hidden_layer_three = tf.nn.dropout(
             fully_connect_layer_three,
@@ -80,10 +89,12 @@ class ImageCnnModel(object):
         )
 
         final_layer = tf.contrib.layers.fully_connected(
+            #fully_connect_layer_three,
             hidden_layer_three,
             120,
             activation_fn=tf.nn.relu,
-            weights_initializer=tf.contrib.layers.xavier_initializer(),
+            #weights_initializer=tf.contrib.layers.xavier_initializer(),
+            weights_initializer=tf.random_uniform_initializer(minval=-0.8, maxval=0.8),
         )
 
         return final_layer
@@ -97,6 +108,7 @@ class ImageCnnModel(object):
 
     @lazy_property
     def optimize(self):
+        #说adam不好，再试下sgd
         #optimizer = tf.train.AdamOptimizer(self.learning_rate)
         optimizer = tf.train.MomentumOptimizer(self.learning_rate, momentum=0.6)
         optimize = optimizer.minimize(self.loss, global_step = self.global_step)

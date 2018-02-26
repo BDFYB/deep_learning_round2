@@ -1,12 +1,12 @@
-import tensorflow as tf 
+import tensorflow as tf
 import os
 import sys
 import json
 
 LABEL_MAP_RELATIVE_PATH = '../data/label_map'
-TFRECORDS_RELATIVE_DIR = '../data/tf_records/test_data/'
+TFRECORDS_RELATIVE_DIR = '../data/tf_records/train_data/'
 SUMMARY_DIR = './tensorboard'
-BATCH_SIZE = 2
+BATCH_SIZE = 1
 
 def get_tfrecords_file_list(file_abspath):
     real_subfile_list = []
@@ -40,7 +40,7 @@ def build_graph(file_list, batch_size):
             'image': tf.FixedLenFeature([], tf.string),
         }
     )
-    tf_record_features = batched_data = tf.train.shuffle_batch(tf_record_features, 
+    tf_record_features = batched_data = tf.train.shuffle_batch(tf_record_features,
         batch_size=batch_size, capacity=batch_size * 50, min_after_dequeue=batch_size)
 
     #注意：decode_raw的格式一定要注意！要跟生成时的格式一样。
@@ -59,10 +59,11 @@ def _main(label_map, label, tf_record_image, image):
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
-        for i in range(1):
+        for i in range(5):
             runned_label, record_image, runned_image, sums = sess.run((label, tf_record_image, image, image_summary_op))
             print(runned_label.shape)
             print(runned_label)
+            print(runned_image)
             """
             print(runned_label)
             print(record_image.shape)
@@ -72,7 +73,7 @@ def _main(label_map, label, tf_record_image, image):
             """
             summary_writer.add_summary(sums)
         coord.request_stop()
-        coord.join(threads)        
+        coord.join(threads)
         summary_writer.close()
 
 if __name__ == "__main__":
@@ -90,5 +91,5 @@ if __name__ == "__main__":
     label, tf_record_image, image = build_graph(tf_records_file_list, BATCH_SIZE)
     _main(label_map, label, tf_record_image, image)
 
-    
+
 

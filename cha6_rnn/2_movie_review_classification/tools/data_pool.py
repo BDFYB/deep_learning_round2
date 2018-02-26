@@ -6,14 +6,14 @@ import numpy
 """
 功能描述：
 1、指定字典（embedding的为10000大小，自带字典为80000+大小）
-2、指定batch_size（未实现）
+2、指定batch_size
 3、输出：返回一个可迭代对象，为已根据字典解析成对应index的list和label，label为0的是负面评价
-为1的是正面评价，并且通过注释可以指定是输出定长数据还是输出不定长数据（即全部词汇构成的list）
+为1的是正面评价，并且通过注释打开某些代码行可以指定是输出定长数据还是输出不定长数据（即全部词汇构成的list）
 """
-DICTIONARY_ORI = "/../data/aclImdb/imdb.vocab"
+DICTIONARY_ORI = "../data/aclImdb/imdb.vocab"
 DICTIONARY_EMBEDDING = "/Users/baidu/AI/deep_learning_round2/cha6_rnn/1_embedding/data/vocabulary.bz2"
-SENTENCE_MAX_LENGTH = 2000
-
+SENTENCE_MAX_LENGTH = 2200
+TEST_DATA_DIR = '../data/aclImdb/test'
 
 class DataPool(object):
     def __init__(self, data_top_dir, is_use_embedding=False, batch_size=1):
@@ -40,6 +40,7 @@ class DataPool(object):
 
         # 2 读取字典
         if is_use_embedding:
+            # 训练时使用现成的embedding进行lookup，则字典采用训练embedding的字典
             data_vocab_dir = DICTIONARY_EMBEDDING
             with bz2.open(data_vocab_dir, 'rt') as vocab:
                 print('Read vocabulary embedding')
@@ -52,6 +53,7 @@ class DataPool(object):
                 vocabulary = [x.strip() for x in vocab]
                 print('dictionary length: %s' % len(vocabulary))
         self.vocab_map = {}
+        # 仅预留0为不存在单词位置
         """
         self.vocab_map["UNDEF"] = 0
         self.vocab_map["ST_TAG"] = 1
@@ -66,11 +68,14 @@ class DataPool(object):
 
 
     def __next__(self):
+        num_count_for_batch = 0
+        vocab_list_in_num = numpy.zeros(shape=(SENTENCE_MAX_LENGTH, self.batch_size))
         for data_dict in self.file_list:
-            vocab_list_in_num = numpy.zeros(SENTENCE_MAX_LENGTH)
+            
             for file_path, label in data_dict.items():
+
                 with open(file_path, 'r') as file_fd:
-                    #print(file_path)
+                    print(file_path)
                     content_str = file_fd.read().replace('.', '').replace('"', "")
                     content_str = content_str.replace(',', '').replace("'", "")
                     content_str = content_str.replace('<br />', "")
@@ -79,13 +84,18 @@ class DataPool(object):
                     # 粗暴点。这里做了一般的简单字符串替换，然后字典中不存在的就都取为0。这里是非固定长度数据
                     # yield [self.vocab_map.get(x.lower(), 0) for x in vocab_list], label
 
+                    # 输出定长数据
                     prepare_list = [self.vocab_map.get(x.lower(), 0) for x in vocab_list]
                     #print(prepare_list)
                     for index, data in enumerate(prepare_list):
                         if index == SENTENCE_MAX_LENGTH:
                             break
-                        vocab_list_in_num[index] = data
-                    yield vocab_list_in_num, label
+                        vocab_list_in_num[index][num_count_for_batch] = data
+                    num_count_for_batch += 1
+                    if num_count_for_batch == self.batch_size:
+                        num_count_for_batch = 0
+                        yield vocab_list_in_num, label
+                        vocab_list_in_num = numpy.zeros(shape=(SENTENCE_MAX_LENGTH, self.batch_size))
 
                     # 用 map函数也可以达到同样目的
                     #yield map([lambda x: self.vocab_map.get(x.lower(), 0)], vocab_list), label 
@@ -93,17 +103,21 @@ class DataPool(object):
 
 
 if __name__ == "__main__":
-    DATA_DIR = '../aclImdb/test'
-    BATCH_SIZE = 1
-    data_pool = DataPool(DATA_DIR, True)
+
+    BATCH_SIZE = 2
+    data_pool = DataPool(data_top_dir=TEST_DATA_DIR, is_use_embedding=False, batch_size=BATCH_SIZE)
     max_length = 0
+    count = 0
     for sentence, label in next(data_pool):
+        count += 1
         print(sentence)
         
         length = len(sentence)
         if length > max_length:
             max_length = length
-        break
+        if count == 2:
+
+            break
     #数据最大一句话长度 2192
     print("max sentence length: %s" % max_length)
 

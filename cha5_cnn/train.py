@@ -1,4 +1,4 @@
-import tensorflow as tf 
+import tensorflow as tf
 from tensorflow.python.framework import graph_util
 import model
 import json
@@ -7,9 +7,9 @@ import os
 SUMMARY_DIR = './summary'
 FORZEN_GRAPH_DIR = './frozen_graph/'
 FROZEN_FILE = "graph.pb"
-TRAIN_DATA_DIR = './data/tf_records/train_data'
+TRAIN_DATA_DIR = './data/tf_records/test_data'
 BATCH_SIZE = 20
-LOOP_TIME = 5000
+LOOP_TIME = 1000
 
 def push_data_to_graph(tfdata_abs_dir):
     real_subfile_list = []
@@ -45,12 +45,12 @@ def train():
     tf.summary.scalar("learning_rate", train_model.learning_rate)
     summarys = tf.summary.merge_all()
 
-    graph = tf.get_default_graph()  
-    input_graph_def = graph.as_graph_def()  
-    output_node_names = ['input_image', 'loss', 'inference']
+    graph = tf.get_default_graph()
+    input_graph_def = graph.as_graph_def()
+    output_node_names = ['max_pool_one', 'max_pool_two','softmax', 'input_image', 'loss', 'inference']
 
     with tf.Session() as sess:
-        summary_writer = tf.summary.FileWriter(SUMMARY_DIR, sess.graph)
+        summary_writer = tf.summary.FileWriter(SUMMARY_DIR, graph=graph)
         init = tf.global_variables_initializer()
         sess.run(init)
         coord = tf.train.Coordinator()
@@ -61,28 +61,29 @@ def train():
                 print("current step: %s" % i)
                 summary_writer.flush()
             input_image, input_label = sess.run((image, label))
+            #print(input_image)
             feed_dict = {
                 train_model.image: input_image,
                 train_model.label: input_label,
             }
-            
+
             _, run_summary = sess.run([train_model.optimize, summarys], feed_dict=feed_dict)
             summary_writer.add_summary(run_summary, i)
 
         coord.request_stop()
-        coord.join(threads)  
+        coord.join(threads)
 
         # save pb file
-        output_graph_def = graph_util.convert_variables_to_constants(  
-            sess,   
-            input_graph_def,   
-            output_node_names, # We split on comma for convenience  
-        )   
+        output_graph_def = graph_util.convert_variables_to_constants(
+            sess,
+            input_graph_def,
+            output_node_names, # We split on comma for convenience
+        )
 
-        # Finally we serialize and dump the output graph to the filesystem  
-        with tf.gfile.GFile(FORZEN_GRAPH_DIR + FROZEN_FILE, "wb") as f:  
-            f.write(output_graph_def.SerializeToString())  
-            print("%d ops in the final graph." % len(output_graph_def.node)) 
+        # Finally we serialize and dump the output graph to the filesystem
+        with tf.gfile.GFile(FORZEN_GRAPH_DIR + FROZEN_FILE, "wb") as f:
+            f.write(output_graph_def.SerializeToString())
+            print("%d ops in the final graph." % len(output_graph_def.node))
 
         summary_writer.close()
 

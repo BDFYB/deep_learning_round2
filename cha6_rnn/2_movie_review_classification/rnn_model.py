@@ -5,10 +5,10 @@ from tools.lazy_property import lazy_property
 本model将embedding训练过程联合到训练过程中，即input未经过embedding处理
 """
 class RnnTrainModel(object):
-    def __init__(self, sentence_length, vocab_size, embedding_size, num_units, batch_size, momentum, gradient_clipping=None):
-        self.input_data = tf.place_holder(shape=(None, sentence_length), name="input_data")
+    def __init__(self, sentence_max_length, vocab_size, embedding_size, output_num_units, batch_size, momentum, gradient_clipping=None):
+        self.input_data = tf.place_holder(shape=(sentence_length, None), name="input_data")
         self.label = tf.place_holder(shape=(None, 1), name="output_data")
-        self.rnn_cell = tf.nn.rnn_cell.GRURNNCell(num_units)
+        self.rnn_cell = tf.nn.rnn_cell.GRURNNCell(output_num_units)
         self.batch_size = batch_size
         self.momentum = momentum
         self.gradient_clipping = gradient_clipping
@@ -25,17 +25,13 @@ class RnnTrainModel(object):
         )
 
     @lazy_property
-    def actual_length(self):
-        pass
-
-    @lazy_property
     def train(self):
-        # batch_size * sentence_length * embedding_size
+        # sentence_length * batch_size * embedding_size
         layer_one = tf.nn.embedding_lookup(self.embedding_map, self.input_data)
 
-        output, state = tf.nn.dynamic_rnn(self.cell, layer_one, sequence_length=self.actual_length, time_major=False, dtype=tf.float32)
-        # 截取output的每个最后一个输出做全连接
-        # batch_size * num_units
+        output, state = tf.nn.dynamic_rnn(self.cell, layer_one, sequence_length=self.actual_length, time_major=True, dtype=tf.float32)
+        # 截取output的每个最后一个输出做全连接（想想有没有必要做，正常RNN输出后取softmax应该可以了）
+        # batch_size * output_num_units
         last_output = _last_output(output)
 
         layer_two = tf.contrib.layers.fully_connected(
@@ -59,7 +55,7 @@ class RnnTrainModel(object):
             learning_rate=0.01,
             momentum=self.momentum,
         )
-        gradient_all = optimizer.compute_gradients(self.loss) 
+        gradient = optimizer.compute_gradients(self.loss) 
         if self.gradient_clipping:
             limit = self.gradient_clipping
             gradient = [
@@ -70,8 +66,17 @@ class RnnTrainModel(object):
         optimizer = self.params.optimizer.apply_gradients(gradient)
         return optimizer
 
+    @lazy_property
+    def infer(self):
+        trained = self.train
+        prediction = tf.nn.softmax(trained, name="softmax_prediction")
+        return prediction
 
-    @static_method
+    @lazy_property
+    def actual_length(self):
+        pass
+
+    @lazy_property
     def _last_output(output):
         pass
     

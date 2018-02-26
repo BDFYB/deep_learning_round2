@@ -53,12 +53,7 @@ def train():
                 train_model.label: input_label,
             }
             
-            #conv_layer_one, pool_layer_one, conv_layer_two, pool_layer_two =\
-            _ = sess.run([train_model.train], feed_dict=feed_dict)
-            print("conv_layer_one_shape :%s" % train_model.conv_layer_one_shape)
-            print("pool_layer_one_shape :%s" % train_model.pool_layer_one_shape)
-            print("conv_layer_two_shape :%s" % train_model.conv_layer_two_shape)
-            print("pool_layer_two_shape :%s" % train_model.pool_layer_two_shape)
+            print(sess.run([train_model.train], feed_dict=feed_dict))
 
         coord.request_stop()
         coord.join(threads)  

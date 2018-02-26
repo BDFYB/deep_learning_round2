@@ -1,4 +1,4 @@
-import tensorflow as tf 
+import tensorflow as tf
 import json
 import os
 
@@ -46,23 +46,26 @@ def inference():
     # 加载计算图
     # parse the graph_def file
 
-    with tf.gfile.GFile(FORZEN_GRAPH_DIR + FROZEN_FILE, "rb") as f:  
-        graph_def = tf.GraphDef()  
-        graph_def.ParseFromString(f.read()) 
+    with tf.gfile.GFile(FORZEN_GRAPH_DIR + FROZEN_FILE, "rb") as f:
+        graph_def = tf.GraphDef()
+        graph_def.ParseFromString(f.read())
 
     # load the graph_def in the default graph
 
     graph = tf.Graph()
     with graph.as_default():
-        tf.import_graph_def(  
-            graph_def,   
-            input_map = None,   
-            return_elements = None,   
-            name = "trained",   
-            op_dict = None,   
-            producer_op_list = None  
+        tf.import_graph_def(
+            graph_def,
+            input_map = None,
+            return_elements = None,
+            name = "trained",
+            op_dict = None,
+            producer_op_list = None
         )
         inputs = graph.get_tensor_by_name('trained/input_image:0')
+        max_pool_one = graph.get_tensor_by_name('trained/max_pool_one:0')
+        max_pool_two = graph.get_tensor_by_name('trained/max_pool_two:0')
+        out_softmax = graph.get_tensor_by_name('trained/softmax:0')
         outputs = graph.get_tensor_by_name('trained/inference:0')
         DATA_DIR = os.path.join(os.path.split(os.path.realpath(__file__))[0], TEST_DATA_DIR)
         inputs_image, labels = push_data_to_graph(DATA_DIR)
@@ -73,21 +76,25 @@ def inference():
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
-        for i in range(20):
+        for i in range(1):
             image_sum, image, label = sess.run([tf_image, inputs_image, labels])
-            
+
             feed_dict = {
                 inputs: image,
             }
-            inference = sess.run(outputs, feed_dict=feed_dict)[0]
+            max_pool_one, max_pool_two, softmax, inference = \
+                            sess.run([max_pool_one, max_pool_two, out_softmax, outputs], feed_dict=feed_dict)
             #print("start inference")
-            print("ori vs infer: %s:%s" % (label, inference + 1))
+            print("ori vs infer: %s:%s" % (label, inference))
+            print("max_pool_one:%s"%max_pool_one)
+            print("max_pool_two:%s"%max_pool_two)
+            print("softmax: %s" % softmax)
             #print("ori_class: %s" % label_map[label])
             #print("inference_class: %s" % label_map[inference+1])
             image_recorder.add_summary(image_sum)
 
         coord.request_stop()
-        coord.join(threads) 
+        coord.join(threads)
 
 
 if __name__ == "__main__":

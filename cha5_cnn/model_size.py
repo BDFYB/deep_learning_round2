@@ -37,7 +37,7 @@ class ImageCnnModel(object):
             biases_initializer=tf.zeros_initializer(),
             trainable=True,
         )
-        self.conv_layer_one_shape = conv_layer_one.get_shape()
+        #conv_layer_one_shape = conv_layer_one.get_shape()
         # conv_layer_one size: (batch_size, 125, 76, 32)
         pool_layer_one = tf.nn.max_pool(
             conv_layer_one,
@@ -45,7 +45,7 @@ class ImageCnnModel(object):
             strides=[1, 2, 2, 1],
             padding='SAME',
         )
-        self.pool_layer_one_shape = pool_layer_one.get_shape()
+        pool_layer_one_shape = pool_layer_one.get_shape()
         # pool_layer_one size: (batch_size, 63, 38, 32)
         conv_layer_two = tf.contrib.layers.conv2d(
             inputs=pool_layer_one,
@@ -58,7 +58,7 @@ class ImageCnnModel(object):
             biases_initializer=tf.zeros_initializer(),
             trainable=True,
         )
-        self.conv_layer_two_shape = conv_layer_two.get_shape()
+        #conv_layer_two_shape = conv_layer_two.get_shape()
         # conv_layer_two size: (batch_size, 32, 19, 64)
         pool_layer_two = tf.nn.max_pool(
             conv_layer_two,
@@ -66,7 +66,7 @@ class ImageCnnModel(object):
             strides=[1, 2, 2, 1],
             padding='SAME',
         )
-        self.pool_layer_two_shape = pool_layer_two.get_shape()
+        pool_layer_two_shape = pool_layer_two.get_shape()
         # pool_layer_two size: (batch_size, 16, 10, 64)
         batch_size, image_hight, image_width, channel = pool_layer_two.get_shape()
         flattened = tf.reshape(pool_layer_two, [-1, image_width.value * image_hight.value * channel.value])
@@ -87,8 +87,9 @@ class ImageCnnModel(object):
             activation_fn=tf.nn.relu,
             weights_initializer=tf.contrib.layers.xavier_initializer(),
         )
-        return conv_layer_one, pool_layer_one, conv_layer_two, pool_layer_two
+        #return conv_layer_one_shape, pool_layer_one_shape, conv_layer_two_shape, pool_layer_two_shape
 
+        return pool_layer_two_shape
     """
     @lazy_property
     def loss(self):
