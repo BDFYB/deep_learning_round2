@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np 
 import os
 
-SUMMARY_DIR = './tensorboard_my_graph'
+SUMMARY_DIR = './summary'
 
 def get_graph(graph):
     with graph.as_default():

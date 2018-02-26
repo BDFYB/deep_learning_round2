@@ -1,0 +1,5 @@
+每个目录对应书内的每一章
+每个目录下，summary目录为tensorboard的graph目录
+每个目录下，tools目录为工具脚本、数据预处理程序、各种test脚本
+每个目录下，data目录为训练与测试数据集
+每个目录下，frozen_graph为常量化后的计算图，用于infer
