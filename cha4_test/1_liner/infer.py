@@ -1,8 +1,7 @@
 import tensorflow as tf 
 
-FROZEN_DIR = './frozen_pb/'
+FROZEN_DIR = './frozen_graph/'
 FROZEN_FILE = 'graph.pb'
-SUMMARY_DIR = './tensorboard_my_graph/'
 
 if __name__ == "__main__":
     # 直接加载计算图

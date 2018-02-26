@@ -3,9 +3,8 @@ from tensorflow.python.framework import graph_util
 from tools import data_processor
 import train
 
-FROZEN_DIR = './frozen_pb/'
+FROZEN_DIR = './frozen_graph/'
 FROZEN_FILE = 'graph.pb'
-SUMMARY_DIR = './tensorboard_my_graph/'
 DATA_FILENAME = './data/varify.csv'
 BATCH_SIZE = 1
 

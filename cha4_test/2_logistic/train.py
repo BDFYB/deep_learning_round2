@@ -5,9 +5,9 @@ import model
 import os
 
 
-FROZEN_DIR = './frozen_pb/'
+FROZEN_DIR = './frozen_graph/'
 FROZEN_FILE = 'graph.pb'
-SUMMARY_DIR = './tensorboard_my_graph/'
+SUMMARY_DIR = './summary/'
 DATA_FILENAME = './data/train.csv'
 BATCH_SIZE = 5
 

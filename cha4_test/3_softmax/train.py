@@ -4,7 +4,7 @@ from tensorflow.python.framework import graph_util
 import model
 import os
 
-SUMMARY_DIR = "./tensorboard/"
+SUMMARY_DIR = "./summary/"
 FROZEN_DIR = "./frozen_graph/"
 FROZEN_FILE = 'graph.pb'
 

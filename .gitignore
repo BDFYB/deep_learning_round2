@@ -1,6 +1,6 @@
 __pycache__/
+.DS_Store
 *.pyc
 data/
 *summary/
-tensorboard/
-*graph/
+frozen_graph/

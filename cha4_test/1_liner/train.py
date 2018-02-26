@@ -6,9 +6,9 @@ import os
 import time
 
 
-FROZEN_DIR = './frozen_pb/'
+FROZEN_DIR = './frozen_graph/'
 FROZEN_FILE = 'graph.pb'
-SUMMARY_DIR = './tensorboard_my_graph/'
+SUMMARY_DIR = './summary/'
 
 def make_data():
     weight_age = np.array([[84, 46], [73, 20], [65, 52], [70, 30], \
