@@ -47,20 +47,22 @@ class DataPool(object):
                 vocabulary = [x.strip() for x in vocab]
                 print('dictionary length: %s' % len(vocabulary))
         else:
-            data_vocab_dir = os.path.split(os.path.realpath(__file__))[0] + DICTIONARY_ORI
-            with open(DICTIONARY_ORI) as vocab:
+            data_vocab_dir = os.path.join(os.path.split(os.path.realpath(__file__))[0], DICTIONARY_ORI)
+            with open(data_vocab_dir) as vocab:
                 print('Read vocabulary ori')
                 vocabulary = [x.strip() for x in vocab]
                 print('dictionary length: %s' % len(vocabulary))
         self.vocab_map = {}
-        # 仅预留0为不存在单词位置
+        # 仅预留1为不存在单词位置
+        # 为什么不预留0？取决于模型获取输入序列长度的方法，为0的话会和后面的空字符混淆
         """
-        self.vocab_map["UNDEF"] = 0
-        self.vocab_map["ST_TAG"] = 1
-        self.vocab_map["END_TAG"] = 2
+        self.vocab_map["UNDEF"] = 1
+        self.vocab_map["ST_TAG"] = 2
+        self.vocab_map["END_TAG"] = 3
         """
         for index, key in enumerate(vocabulary):
-            self.vocab_map[key] = index + 1
+            # index从0开始，但是预留出1为不存在字符，因此+2
+            self.vocab_map[key] = index + 2
 
 
     def __iter__(self):
@@ -70,12 +72,14 @@ class DataPool(object):
     def __next__(self):
         num_count_for_batch = 0
         vocab_list_in_num = numpy.zeros(shape=(SENTENCE_MAX_LENGTH, self.batch_size))
+        label_list = numpy.zeros(shape=(self.batch_size))
         for data_dict in self.file_list:
             
             for file_path, label in data_dict.items():
 
                 with open(file_path, 'r') as file_fd:
-                    print(file_path)
+                    #print(file_path)
+                    # 这种数据清洗太粗糙，后续可以考虑如何更准确的预处理
                     content_str = file_fd.read().replace('.', '').replace('"', "")
                     content_str = content_str.replace(',', '').replace("'", "")
                     content_str = content_str.replace('<br />', "")
@@ -85,17 +89,20 @@ class DataPool(object):
                     # yield [self.vocab_map.get(x.lower(), 0) for x in vocab_list], label
 
                     # 输出定长数据
-                    prepare_list = [self.vocab_map.get(x.lower(), 0) for x in vocab_list]
+                    # 默认字典中不存在的数据取出来为1，为了能够在模型中准确获取数据长度
+                    prepare_list = [self.vocab_map.get(x.lower(), 1) for x in vocab_list]
                     #print(prepare_list)
                     for index, data in enumerate(prepare_list):
                         if index == SENTENCE_MAX_LENGTH:
                             break
                         vocab_list_in_num[index][num_count_for_batch] = data
+                    label_list[num_count_for_batch] = label
                     num_count_for_batch += 1
                     if num_count_for_batch == self.batch_size:
                         num_count_for_batch = 0
-                        yield vocab_list_in_num, label
+                        yield vocab_list_in_num, label_list
                         vocab_list_in_num = numpy.zeros(shape=(SENTENCE_MAX_LENGTH, self.batch_size))
+                        label_list = numpy.zeros(shape=(self.batch_size))
 
                     # 用 map函数也可以达到同样目的
                     #yield map([lambda x: self.vocab_map.get(x.lower(), 0)], vocab_list), label 
@@ -111,6 +118,7 @@ if __name__ == "__main__":
     for sentence, label in next(data_pool):
         count += 1
         print(sentence)
+        print(label)
         
         length = len(sentence)
         if length > max_length:

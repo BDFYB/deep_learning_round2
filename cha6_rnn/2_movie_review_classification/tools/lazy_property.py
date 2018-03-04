@@ -6,9 +6,9 @@ def lazy_property(func):
     @property 
     @wraps(func)
     def lazy_func(self):
-        if not has_attr(self, attr_name):
-            set_attr(self, attr_name, func(self))
-        return get_attr(self, attr_name)
+        if not hasattr(self, attr_name):
+            setattr(self, attr_name, func(self))
+        return getattr(self, attr_name)
 
     return lazy_func
     
