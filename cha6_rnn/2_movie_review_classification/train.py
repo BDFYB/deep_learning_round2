@@ -11,7 +11,9 @@ IMBEDDING_MAP_FILE = "./data/embedding_map.json"
 DATA_DIR = './data/aclImdb/train'
 PARAMS = {
     "embedding_size": 128,
-    "vocab_size": 89527,
+    #"vocab_size": 89527,
+    #vocab大小取决于data_pool增添的额外字符数，这里扩大一些
+    "vocab_size": 89530,
     "sentence_max_length": 2200,
     "output_num_units": 2,
     "batch_size": 2,
