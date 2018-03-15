@@ -6,6 +6,7 @@ def lazy_property(func):
     @property 
     @wraps(func)
     def lazy_func(self):
+        #print("a call")
         if not hasattr(self, attr_name):
             setattr(self, attr_name, func(self))
         return getattr(self, attr_name)
