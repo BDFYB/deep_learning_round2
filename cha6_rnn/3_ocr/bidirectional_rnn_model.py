@@ -80,7 +80,7 @@ class BidirectionRnnModule(object):
     @lazy_property
     def loss(self):
         cross_entropy = -tf.reduce_sum(self.labels * tf.log(self.train), axis=2)
-        mask =tf.sign(tf.reduce_max(tf.abs(self.labels), axis=2))
+        mask = tf.sign(tf.reduce_max(tf.abs(self.labels), axis=2))
         reduced_loss = mask * cross_entropy 
         # 计算每个batch的loss
         loss = tf.reduce_sum(reduced_loss, axis=0)
